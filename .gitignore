@@ -1,0 +1,20 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Test and notebook cache
+.pytest_cache/
+.ipynb_checkpoints/
+pytest-cache-files-*/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+
+# Local scratch artifacts
+test_plot.png
