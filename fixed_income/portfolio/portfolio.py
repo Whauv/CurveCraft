@@ -16,6 +16,19 @@ from fixed_income.curves.zero_curve import ZeroCurve
 
 
 @dataclass(slots=True)
+class PositionRiskSnapshot:
+    """Precomputed risk measures for a single portfolio position."""
+
+    name: str
+    signed_notional: float
+    market_value: float
+    dv01: float
+    duration: float
+    convexity: float
+    key_rate_series: pd.Series
+
+
+@dataclass(slots=True)
 class BondPosition:
     """Portfolio position in a bond instrument.
 
@@ -58,39 +71,22 @@ class Portfolio:
 
     def total_market_value(self, zero_curve: ZeroCurve, settlement_date: date) -> float:
         """Return total signed market value."""
-        return float(
-            sum(
-                self._position_market_value(position=position, zero_curve=zero_curve, settlement_date=settlement_date)
-                for position in self.positions
-            )
-        )
+        snapshots = self._collect_position_snapshots(zero_curve=zero_curve, settlement_date=settlement_date)
+        return float(sum(snapshot.market_value for snapshot in snapshots))
 
     def portfolio_dv01(self, zero_curve: ZeroCurve, settlement_date: date) -> float:
         """Return total signed portfolio DV01."""
-        return float(
-            sum(
-                self._position_dv01(position=position, zero_curve=zero_curve, settlement_date=settlement_date)
-                for position in self.positions
-            )
-        )
+        snapshots = self._collect_position_snapshots(zero_curve=zero_curve, settlement_date=settlement_date)
+        return float(sum(snapshot.dv01 for snapshot in snapshots))
 
     def portfolio_duration(self, zero_curve: ZeroCurve, settlement_date: date) -> float:
         """Return DV01-weighted portfolio duration."""
+        snapshots = self._collect_position_snapshots(zero_curve=zero_curve, settlement_date=settlement_date)
         weighted_sum = 0.0
         total_weight = 0.0
-        for position in self.positions:
-            position_dv01 = self._position_dv01(
-                position=position,
-                zero_curve=zero_curve,
-                settlement_date=settlement_date,
-            )
-            position_duration = effective_duration(
-                bond=position.bond,
-                zero_curve=zero_curve,
-                settlement_date=settlement_date,
-            )
-            weight = abs(position_dv01)
-            weighted_sum += weight * position_duration
+        for snapshot in snapshots:
+            weight = abs(snapshot.dv01)
+            weighted_sum += weight * snapshot.duration
             total_weight += weight
         if total_weight == 0.0:
             return 0.0
@@ -98,21 +94,12 @@ class Portfolio:
 
     def portfolio_convexity(self, zero_curve: ZeroCurve, settlement_date: date) -> float:
         """Return market-value-weighted portfolio convexity."""
+        snapshots = self._collect_position_snapshots(zero_curve=zero_curve, settlement_date=settlement_date)
         weighted_sum = 0.0
         total_weight = 0.0
-        for position in self.positions:
-            market_value = self._position_market_value(
-                position=position,
-                zero_curve=zero_curve,
-                settlement_date=settlement_date,
-            )
-            position_convexity = effective_convexity(
-                bond=position.bond,
-                zero_curve=zero_curve,
-                settlement_date=settlement_date,
-            )
-            weight = abs(market_value)
-            weighted_sum += weight * position_convexity
+        for snapshot in snapshots:
+            weight = abs(snapshot.market_value)
+            weighted_sum += weight * snapshot.convexity
             total_weight += weight
         if total_weight == 0.0:
             return 0.0
@@ -120,19 +107,14 @@ class Portfolio:
 
     def key_rate_dv01_profile(self, zero_curve: ZeroCurve, settlement_date: date) -> pd.DataFrame:
         """Return a position-level key rate DV01 profile."""
+        snapshots = self._collect_position_snapshots(zero_curve=zero_curve, settlement_date=settlement_date)
         rows: list[dict[str, float | str]] = []
         total_row: dict[str, float | str] = {"name": "Total"}
 
-        for position in self.positions:
-            _, series = key_rate_dv01(
-                bond=position.bond,
-                zero_curve=zero_curve,
-                settlement_date=settlement_date,
-            )
-            scaled_series = series * position.quantity * position.direction
-            row: dict[str, float | str] = {"name": self._position_name(position)}
+        for snapshot in snapshots:
+            row: dict[str, float | str] = {"name": snapshot.name}
             for tenor in STANDARD_TENOR_BUCKETS:
-                row[f"{tenor:g}Y"] = float(scaled_series.loc[tenor])
+                row[f"{tenor:g}Y"] = float(snapshot.key_rate_series.loc[tenor])
             rows.append(row)
 
         for tenor in STANDARD_TENOR_BUCKETS:
@@ -142,34 +124,17 @@ class Portfolio:
 
     def risk_report(self, zero_curve: ZeroCurve, settlement_date: date) -> pd.DataFrame:
         """Return a position-level risk report."""
+        snapshots = self._collect_position_snapshots(zero_curve=zero_curve, settlement_date=settlement_date)
         rows: list[dict[str, float | str]] = []
-        for position in self.positions:
-            market_value = self._position_market_value(
-                position=position,
-                zero_curve=zero_curve,
-                settlement_date=settlement_date,
-            )
-            position_dv01 = self._position_dv01(
-                position=position,
-                zero_curve=zero_curve,
-                settlement_date=settlement_date,
-            )
+        for snapshot in snapshots:
             rows.append(
                 {
-                    "CUSIP/name": self._position_name(position),
-                    "notional": float(position.notional * position.direction),
-                    "MV": market_value,
-                    "DV01": position_dv01,
-                    "duration": effective_duration(
-                        bond=position.bond,
-                        zero_curve=zero_curve,
-                        settlement_date=settlement_date,
-                    ),
-                    "convexity": effective_convexity(
-                        bond=position.bond,
-                        zero_curve=zero_curve,
-                        settlement_date=settlement_date,
-                    ),
+                    "CUSIP/name": snapshot.name,
+                    "notional": snapshot.signed_notional,
+                    "MV": snapshot.market_value,
+                    "DV01": snapshot.dv01,
+                    "duration": snapshot.duration,
+                    "convexity": snapshot.convexity,
                 }
             )
         return pd.DataFrame(rows, columns=["CUSIP/name", "notional", "MV", "DV01", "duration", "convexity"])
@@ -208,6 +173,48 @@ class Portfolio:
             settlement_date=settlement_date,
         )
         return float(position.direction * position.quantity * unit_dv01)
+
+    def _collect_position_snapshots(self, zero_curve: ZeroCurve, settlement_date: date) -> list[PositionRiskSnapshot]:
+        """Return precomputed risk snapshots for each portfolio position."""
+        snapshots: list[PositionRiskSnapshot] = []
+        for position in self.positions:
+            market_value = self._position_market_value(
+                position=position,
+                zero_curve=zero_curve,
+                settlement_date=settlement_date,
+            )
+            position_dv01 = self._position_dv01(
+                position=position,
+                zero_curve=zero_curve,
+                settlement_date=settlement_date,
+            )
+            duration = effective_duration(
+                bond=position.bond,
+                zero_curve=zero_curve,
+                settlement_date=settlement_date,
+            )
+            convexity = effective_convexity(
+                bond=position.bond,
+                zero_curve=zero_curve,
+                settlement_date=settlement_date,
+            )
+            _, series = key_rate_dv01(
+                bond=position.bond,
+                zero_curve=zero_curve,
+                settlement_date=settlement_date,
+            )
+            snapshots.append(
+                PositionRiskSnapshot(
+                    name=self._position_name(position),
+                    signed_notional=float(position.notional * position.direction),
+                    market_value=market_value,
+                    dv01=position_dv01,
+                    duration=duration,
+                    convexity=convexity,
+                    key_rate_series=series * position.quantity * position.direction,
+                )
+            )
+        return snapshots
 
     @staticmethod
     def _position_name(position: BondPosition) -> str:

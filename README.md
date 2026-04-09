@@ -189,6 +189,8 @@ $$
 `fixed_income.api`
 
 - FastAPI endpoints for pricing, YTM, analytics, curve bootstrap, and portfolio risk
+- Pydantic request/response schemas split from route handlers for a thinner web layer
+- portfolio risk can use either a caller-supplied curve or the documented sample fallback
 
 ## Example Output
 
@@ -270,5 +272,7 @@ Project regression:
 ```bash
 python -m pytest tests/test_bonds.py tests/test_curves.py tests/test_analytics.py tests/test_portfolio.py tests/test_visualization.py tests/test_api.py -q -p no:cacheprovider
 ```
+
+Continuous validation is also configured in [`.github/workflows/tests.yml`](.github/workflows/tests.yml) for GitHub Actions.
 
 Phase-by-phase validators are available in `scripts/validate_phase_*.py`.
