@@ -9,6 +9,14 @@ if not hasattr(FASTAPI_MODULE, "FastAPI"):
     pytest.skip("FastAPI installation is incomplete in this environment.", allow_module_level=True)
 
 from fixed_income.api.main import (
+    bond_ytm,
+    bootstrap_curve,
+    duration_analytics,
+    health,
+    portfolio_risk,
+    price_bond,
+)
+from fixed_income.api.schemas import (
     BondPriceRequest,
     BondSpec,
     BondYtmRequest,
@@ -17,12 +25,6 @@ from fixed_income.api.main import (
     DurationRequest,
     PortfolioPositionRequest,
     PortfolioRiskRequest,
-    bond_ytm,
-    bootstrap_curve,
-    duration_analytics,
-    health,
-    portfolio_risk,
-    price_bond,
 )
 
 
