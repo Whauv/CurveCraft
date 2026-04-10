@@ -1,6 +1,7 @@
 # Python cache
 __pycache__/
 *.py[cod]
+*.egg-info/
 
 # Test and notebook cache
 .pytest_cache/
@@ -8,6 +9,7 @@ __pycache__/
 pytest-cache-files-*/
 
 # Virtual environments
+.ci-venv/
 .venv/
 venv/
 env/

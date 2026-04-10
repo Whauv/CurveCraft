@@ -8,12 +8,12 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TEST_FILES = [
-    "tests/test_bonds.py",
-    "tests/test_curves.py",
-    "tests/test_analytics.py",
-    "tests/test_portfolio.py",
-    "tests/test_visualization.py",
-    "tests/test_api.py",
+    "tests/bonds/test_bonds.py",
+    "tests/curves/test_curves.py",
+    "tests/analytics/test_analytics.py",
+    "tests/portfolio/test_portfolio.py",
+    "tests/visualization/test_visualization.py",
+    "tests/api/test_api.py",
 ]
 
 
