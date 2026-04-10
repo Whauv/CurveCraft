@@ -6,16 +6,23 @@ import sys
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+SRC_PATH = PROJECT_ROOT / "src"
 
-from fastapi.testclient import TestClient
 
-from fixed_income.api.main import app
+def _bootstrap_src_path() -> None:
+    """Ensure the src layout is importable when running the script directly."""
+    src_text = str(SRC_PATH)
+    if src_text not in sys.path:
+        sys.path.insert(0, src_text)
 
 
 def main() -> None:
     """Run the required Phase 8 API validation checks."""
+    _bootstrap_src_path()
+    from fastapi.testclient import TestClient
+
+    from fixed_income.api.main import app
+
     client = TestClient(app)
 
     health = client.get("/health")

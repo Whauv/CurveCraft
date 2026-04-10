@@ -7,18 +7,24 @@ from datetime import date
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-from fixed_income.bonds.bond import FixedRateBond
-
+SRC_PATH = PROJECT_ROOT / "src"
 FACE_VALUE = 1000.0
 COUPON_RATE = 0.04
 SETTLEMENT_DATE = date(2025, 1, 1)
 
 
+def _bootstrap_src_path() -> None:
+    """Ensure the src layout is importable when running the script directly."""
+    src_text = str(SRC_PATH)
+    if src_text not in sys.path:
+        sys.path.insert(0, src_text)
+
+
 def main() -> None:
     """Run the required Phase 1 validation checks."""
+    _bootstrap_src_path()
+    from fixed_income.bonds.bond import FixedRateBond
+
     bond = FixedRateBond(
         face_value=FACE_VALUE,
         coupon_rate=COUPON_RATE,
