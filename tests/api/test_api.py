@@ -2,28 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import pytest
-
-if TYPE_CHECKING:
-    from fixed_income.api.main import (
-        bond_ytm,
-        bootstrap_curve,
-        duration_analytics,
-        portfolio_risk,
-        price_bond,
-    )
-    from fixed_income.api.schemas import (
-        BondPriceRequest,
-        BondSpec,
-        BondYtmRequest,
-        CurveBootstrapRequest,
-        CurveInstrumentRequest,
-        DurationRequest,
-        PortfolioPositionRequest,
-        PortfolioRiskRequest,
-    )
 
 
 def _load_api_components() -> tuple:
