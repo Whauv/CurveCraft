@@ -68,7 +68,10 @@ def key_rate_dv01(
 def _curve_on_buckets(zero_curve: ZeroCurve, buckets: list[float]) -> ZeroCurve:
     """Project a curve onto the requested tenor buckets using spot rates."""
     node_times = np.array([0.0, *sorted(float(bucket) for bucket in buckets)], dtype=float)
-    spot_rates = np.array([0.0 if np.isclose(t, 0.0) else zero_curve.spot_rate(float(t)) for t in node_times], dtype=float)
+    spot_rates = np.array(
+        [0.0 if np.isclose(t, 0.0) else zero_curve.spot_rate(float(t)) for t in node_times],
+        dtype=float,
+    )
     discount_factors = np.exp(-spot_rates * node_times)
     discount_factors[0] = 1.0
     return ZeroCurve(

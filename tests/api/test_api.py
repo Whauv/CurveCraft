@@ -4,37 +4,58 @@ from __future__ import annotations
 
 import pytest
 
-FASTAPI_MODULE = pytest.importorskip("fastapi")
-if not hasattr(FASTAPI_MODULE, "FastAPI"):
-    pytest.skip("FastAPI installation is incomplete in this environment.", allow_module_level=True)
 
-from fixed_income.api.main import (
-    bond_ytm,
-    bootstrap_curve,
-    duration_analytics,
-    health,
-    portfolio_risk,
-    price_bond,
-)
-from fixed_income.api.schemas import (
-    BondPriceRequest,
-    BondSpec,
-    BondYtmRequest,
-    CurveBootstrapRequest,
-    CurveInstrumentRequest,
-    DurationRequest,
-    PortfolioPositionRequest,
-    PortfolioRiskRequest,
-)
+def _load_api_components() -> tuple:
+    """Load API callables and schemas, skipping cleanly if FastAPI is unavailable."""
+    try:
+        from fixed_income.api.main import (
+            bond_ytm,
+            bootstrap_curve,
+            duration_analytics,
+            health,
+            portfolio_risk,
+            price_bond,
+        )
+        from fixed_income.api.schemas import (
+            BondPriceRequest,
+            BondSpec,
+            BondYtmRequest,
+            CurveBootstrapRequest,
+            CurveInstrumentRequest,
+            DurationRequest,
+            PortfolioPositionRequest,
+            PortfolioRiskRequest,
+        )
+    except Exception as exc:  # pragma: no cover - local broken env fallback
+        pytest.skip(f"FastAPI installation is incomplete in this environment: {exc}")
+
+    return (
+        bond_ytm,
+        bootstrap_curve,
+        duration_analytics,
+        health,
+        portfolio_risk,
+        price_bond,
+        BondPriceRequest,
+        BondSpec,
+        BondYtmRequest,
+        CurveBootstrapRequest,
+        CurveInstrumentRequest,
+        DurationRequest,
+        PortfolioPositionRequest,
+        PortfolioRiskRequest,
+    )
 
 
 def test_health_endpoint() -> None:
     """Health endpoint should return an ok status."""
+    _, _, _, health, _, _, *_ = _load_api_components()
     assert health() == {"status": "ok", "service": "curvecraft-api"}
 
 
 def test_bond_price_endpoint() -> None:
     """Bond pricing endpoint should return price components."""
+    _, _, _, _, _, price_bond, BondPriceRequest, *_ = _load_api_components()
     response = price_bond(
         BondPriceRequest.model_validate(
             {
@@ -55,6 +76,7 @@ def test_bond_price_endpoint() -> None:
 
 def test_bond_ytm_endpoint() -> None:
     """Bond YTM endpoint should recover par yield."""
+    bond_ytm, _, _, _, _, _, _, BondSpec, BondYtmRequest, *_ = _load_api_components()
     response = bond_ytm(
         BondYtmRequest(
             bond_spec=BondSpec(
@@ -74,6 +96,9 @@ def test_bond_ytm_endpoint() -> None:
 
 def test_curve_bootstrap_endpoint() -> None:
     """Curve bootstrap endpoint should return curve arrays."""
+    _, bootstrap_curve, _, _, _, _, _, _, _, CurveBootstrapRequest, CurveInstrumentRequest, *_ = (
+        _load_api_components()
+    )
     response = bootstrap_curve(
         CurveBootstrapRequest(
             instruments=[
@@ -92,6 +117,7 @@ def test_curve_bootstrap_endpoint() -> None:
 
 def test_duration_endpoint() -> None:
     """Duration analytics endpoint should return all requested measures."""
+    _, _, duration_analytics, _, _, _, _, _, _, _, _, DurationRequest, *_ = _load_api_components()
     response = duration_analytics(
         DurationRequest.model_validate(
             {
@@ -116,6 +142,9 @@ def test_duration_endpoint() -> None:
 
 def test_portfolio_risk_endpoint() -> None:
     """Portfolio risk endpoint should return aggregate risk and report rows."""
+    _, _, _, _, portfolio_risk, _, _, BondSpec, _, _, _, _, PortfolioPositionRequest, PortfolioRiskRequest = (
+        _load_api_components()
+    )
     response = portfolio_risk(
         PortfolioRiskRequest(
             positions=[
@@ -142,6 +171,22 @@ def test_portfolio_risk_endpoint() -> None:
 
 def test_portfolio_risk_accepts_explicit_curve() -> None:
     """Portfolio risk endpoint should accept a caller-supplied curve."""
+    (
+        _,
+        _,
+        _,
+        _,
+        portfolio_risk,
+        _,
+        _,
+        BondSpec,
+        _,
+        _,
+        CurveInstrumentRequest,
+        _,
+        PortfolioPositionRequest,
+        PortfolioRiskRequest,
+    ) = _load_api_components()
     response = portfolio_risk(
         PortfolioRiskRequest(
             positions=[

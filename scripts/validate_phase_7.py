@@ -5,28 +5,28 @@ from __future__ import annotations
 import sys
 from datetime import date
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from fixed_income.curves.zero_curve import ZeroCurve
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-from fixed_income.analytics.key_rate_dv01 import key_rate_dv01
-from fixed_income.bonds.bond import FixedRateBond
-from fixed_income.curves.bootstrapper import Bootstrapper, MarketInstrument
-from fixed_income.portfolio.portfolio import Portfolio
-from fixed_income.visualization.plots import (
-    plot_cash_flows,
-    plot_key_rate_dv01,
-    plot_portfolio_risk,
-    plot_price_yield,
-    plot_yield_curve,
-)
-
+SRC_PATH = PROJECT_ROOT / "src"
 SETTLEMENT_DATE = date(2025, 1, 1)
 
 
-def sample_curve():
+def _bootstrap_src_path() -> None:
+    """Ensure the src layout is importable when running the script directly."""
+    src_text = str(SRC_PATH)
+    if src_text not in sys.path:
+        sys.path.insert(0, src_text)
+
+
+def sample_curve() -> "ZeroCurve":
     """Return the sample Phase 3 zero curve."""
+    _bootstrap_src_path()
+    from fixed_income.curves.bootstrapper import Bootstrapper, MarketInstrument
+
     instruments = [
         MarketInstrument(instrument_type="deposit", tenor="1M", rate=0.0500, settlement_days=2),
         MarketInstrument(instrument_type="deposit", tenor="3M", rate=0.0510, settlement_days=2),
@@ -42,6 +42,18 @@ def sample_curve():
 
 def main() -> None:
     """Run the required Phase 7 validation checks."""
+    _bootstrap_src_path()
+    from fixed_income.analytics.key_rate_dv01 import key_rate_dv01
+    from fixed_income.bonds.bond import FixedRateBond
+    from fixed_income.portfolio.portfolio import Portfolio
+    from fixed_income.visualization.plots import (
+        plot_cash_flows,
+        plot_key_rate_dv01,
+        plot_portfolio_risk,
+        plot_price_yield,
+        plot_yield_curve,
+    )
+
     zero_curve = sample_curve()
     bond = FixedRateBond(
         face_value=1000.0,

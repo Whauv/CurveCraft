@@ -4,18 +4,29 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 
+if TYPE_CHECKING:
+    from fixed_income.curves.bootstrapper import MarketInstrument
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-from fixed_income.curves.bootstrapper import Bootstrapper, MarketInstrument
+SRC_PATH = PROJECT_ROOT / "src"
 
 
-def sample_instruments() -> list[MarketInstrument]:
+def _bootstrap_src_path() -> None:
+    """Ensure the src layout is importable when running the script directly."""
+    src_text = str(SRC_PATH)
+    if src_text not in sys.path:
+        sys.path.insert(0, src_text)
+
+
+def sample_instruments() -> list["MarketInstrument"]:
     """Return the Phase 3 sample market quotes."""
+    _bootstrap_src_path()
+    from fixed_income.curves.bootstrapper import MarketInstrument
+
     return [
         MarketInstrument(instrument_type="deposit", tenor="1M", rate=0.0500, settlement_days=2),
         MarketInstrument(instrument_type="deposit", tenor="3M", rate=0.0510, settlement_days=2),
@@ -30,6 +41,9 @@ def sample_instruments() -> list[MarketInstrument]:
 
 def main() -> None:
     """Run the required Phase 3 validation checks."""
+    _bootstrap_src_path()
+    from fixed_income.curves.bootstrapper import Bootstrapper
+
     curve = Bootstrapper(sample_instruments()).bootstrap()
     repricing_curve = Bootstrapper(sample_instruments()).bootstrap(interpolation_method="log_linear")
 

@@ -27,7 +27,16 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "pytest>=8.3,<9.0",
+  "ruff>=0.11,<1.0",
 ]
 
 [tool.setuptools.packages.find]
+where = ["src"]
 include = ["fixed_income*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]

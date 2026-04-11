@@ -77,7 +77,10 @@ def plot_price_yield(
     """
     settlement = settlement_date or bond.issue_date
     yields = np.linspace(yield_range[0], yield_range[1], PRICE_YIELD_GRID_POINTS)
-    clean_prices = np.array([bond.clean_price(yield_=float(y), settlement_date=settlement) for y in yields], dtype=float)
+    clean_prices = np.array(
+        [bond.clean_price(yield_=float(y), settlement_date=settlement) for y in yields],
+        dtype=float,
+    )
 
     current_yield = float(np.clip(bond.coupon_rate if bond.coupon_rate > 0.0 else np.mean(yield_range), *yield_range))
     current_price = bond.clean_price(yield_=current_yield, settlement_date=settlement)
