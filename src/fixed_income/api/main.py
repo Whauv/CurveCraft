@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from fixed_income.analytics.convexity import convexity
@@ -24,10 +24,10 @@ from .dashboard import (
 )
 from .exceptions import configure_exception_handlers
 from .schemas import (
-    BondDashboardRequest,
-    BondDashboardResponse,
     BondCurvePriceRequest,
     BondCurvePriceResponse,
+    BondDashboardRequest,
+    BondDashboardResponse,
     BondPriceRequest,
     BondPriceResponse,
     BondYtmRequest,
@@ -50,7 +50,12 @@ from .schemas import (
     PortfolioRiskResponse,
     RiskReportRow,
 )
-from .services import bad_request, build_bond, build_market_instruments, default_curve_instruments
+from .services import (
+    bad_request,
+    build_bond,
+    build_market_instruments,
+    default_curve_instruments,
+)
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 INDEX_PATH = STATIC_DIR / "index.html"

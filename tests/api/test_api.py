@@ -27,8 +27,8 @@ def _load_api_components() -> dict[str, object]:
             price_bond,
         )
         from fixed_income.api.schemas import (
-            BondDashboardRequest,
             BondCurvePriceRequest,
+            BondDashboardRequest,
             BondPriceRequest,
             BondSpec,
             BondYtmRequest,

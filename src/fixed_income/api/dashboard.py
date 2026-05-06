@@ -5,7 +5,13 @@ from __future__ import annotations
 import numpy as np
 
 from fixed_income.analytics.convexity import convexity, effective_convexity
-from fixed_income.analytics.duration import BASIS_POINT, effective_duration, macaulay_duration, modified_duration, price_from_curve
+from fixed_income.analytics.duration import (
+    BASIS_POINT,
+    effective_duration,
+    macaulay_duration,
+    modified_duration,
+    price_from_curve,
+)
 from fixed_income.analytics.dv01 import dv01, dv01_from_curve
 from fixed_income.analytics.key_rate_dv01 import key_rate_dv01
 from fixed_income.curves.bootstrapper import Bootstrapper
@@ -33,7 +39,11 @@ from .schemas import (
     PortfolioKeyRateRow,
     RiskReportRow,
 )
-from .services import build_bond, build_market_instruments, default_curve_instruments
+from .services import (
+    build_bond,
+    build_market_instruments,
+    default_curve_instruments,
+)
 
 CURVE_FORWARD_STEP = 1.0 / 12.0
 STANDARD_SCENARIO_BPS = 10.0
