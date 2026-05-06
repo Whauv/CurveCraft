@@ -2,29 +2,59 @@
 
 from __future__ import annotations
 
-from fastapi import FastAPI, HTTPException
+from pathlib import Path
+
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 from fixed_income.analytics.convexity import convexity
 from fixed_income.analytics.duration import macaulay_duration, modified_duration
 from fixed_income.analytics.dv01 import dv01
 from fixed_income.curves.bootstrapper import Bootstrapper
 
+from .dashboard import (
+    build_bond_curve_price,
+    build_bond_dashboard,
+    build_curve_dashboard,
+    build_dashboard_config,
+    build_hedge_analysis,
+    build_key_rate_response,
+    build_portfolio_dashboard,
+)
 from .exceptions import configure_exception_handlers
 from .schemas import (
+    BondDashboardRequest,
+    BondDashboardResponse,
+    BondCurvePriceRequest,
+    BondCurvePriceResponse,
     BondPriceRequest,
     BondPriceResponse,
     BondYtmRequest,
     BondYtmResponse,
     CurveBootstrapRequest,
     CurveBootstrapResponse,
+    CurveDashboardRequest,
+    CurveDashboardResponse,
+    DashboardConfigResponse,
     DurationAnalyticsResponse,
     DurationRequest,
     ErrorResponse,
+    HedgeAnalysisRequest,
+    HedgeAnalysisResponse,
+    KeyRateRequest,
+    KeyRateResponse,
+    PortfolioDashboardRequest,
+    PortfolioDashboardResponse,
     PortfolioRiskRequest,
     PortfolioRiskResponse,
     RiskReportRow,
 )
 from .services import bad_request, build_bond, build_market_instruments, default_curve_instruments
+
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+INDEX_PATH = STATIC_DIR / "index.html"
+INDEX_TEMPLATE = INDEX_PATH.read_text(encoding="utf-8")
 
 app = FastAPI(
     title="CurveCraft Fixed Income API",
@@ -32,12 +62,71 @@ app = FastAPI(
     description="Bond pricing, curve bootstrapping, and fixed income risk analytics.",
 )
 configure_exception_handlers(app)
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+@app.get("/", include_in_schema=False)
+def dashboard_home(request: Request) -> HTMLResponse:
+    """Serve the dashboard homepage."""
+    page = (request.query_params.get("page") or "bond").strip().lower()
+    if page == "curve":
+        return _render_dashboard_page("curve-workspace")
+    if page == "portfolio":
+        return _render_dashboard_page("portfolio-workspace")
+    return _render_dashboard_page("bond-workspace")
+
+
+@app.get("/bond", include_in_schema=False)
+@app.get("/bond/", include_in_schema=False)
+def dashboard_bond_page() -> HTMLResponse:
+    """Serve the dedicated bond analytics page."""
+    return _render_dashboard_page("bond-workspace")
+
+
+@app.get("/curve", include_in_schema=False)
+@app.get("/curve/", include_in_schema=False)
+def dashboard_curve_page() -> HTMLResponse:
+    """Serve the dedicated curve analytics page."""
+    return _render_dashboard_page("curve-workspace")
+
+
+@app.get("/portfolio", include_in_schema=False)
+@app.get("/portfolio/", include_in_schema=False)
+def dashboard_portfolio_page() -> HTMLResponse:
+    """Serve the dedicated portfolio analytics page."""
+    return _render_dashboard_page("portfolio-workspace")
+
+
+def _render_dashboard_page(initial_workspace: str) -> HTMLResponse:
+    """Render dashboard HTML with a route-specific initial workspace."""
+    html = INDEX_TEMPLATE
+    workspaces = ("bond-workspace", "curve-workspace", "portfolio-workspace")
+    for workspace in workspaces:
+        active_class = "workspace is-active" if workspace == initial_workspace else "workspace"
+        html = html.replace(
+            f'<section class="workspace is-active" id="{workspace}">',
+            f'<section class="{active_class}" id="{workspace}">',
+        )
+        html = html.replace(
+            f'<section class="workspace" id="{workspace}">',
+            f'<section class="{active_class}" id="{workspace}">',
+        )
+    return HTMLResponse(
+        content=html,
+        headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"},
+    )
 
 
 @app.get("/health")
 def health() -> dict[str, str]:
     """Return a simple service health response."""
     return {"status": "ok", "service": "curvecraft-api"}
+
+
+@app.get("/dashboard/config", response_model=DashboardConfigResponse)
+def dashboard_config() -> DashboardConfigResponse:
+    """Return supported options and sample payloads for the web dashboard."""
+    return build_dashboard_config()
 
 
 @app.post("/bond/price", response_model=BondPriceResponse, responses={400: {"model": ErrorResponse}})
@@ -132,3 +221,65 @@ def portfolio_risk(request: PortfolioRiskRequest) -> PortfolioRiskResponse:
         curve_source=curve_source,
         risk_report=report_rows,
     )
+
+
+@app.post("/dashboard/bond", response_model=BondDashboardResponse, responses={400: {"model": ErrorResponse}})
+def bond_dashboard(request: BondDashboardRequest) -> BondDashboardResponse:
+    """Return dashboard-ready bond analytics and chart data."""
+    try:
+        return build_bond_dashboard(request)
+    except (ValueError, RuntimeError) as error:
+        raise bad_request(str(error)) from error
+
+
+@app.post(
+    "/dashboard/bond-curve-price",
+    response_model=BondCurvePriceResponse,
+    responses={400: {"model": ErrorResponse}},
+)
+def bond_curve_price_dashboard(request: BondCurvePriceRequest) -> BondCurvePriceResponse:
+    """Return curve-based bond pricing metrics and optional compare mode results."""
+    try:
+        return build_bond_curve_price(request)
+    except (ValueError, RuntimeError) as error:
+        raise bad_request(str(error)) from error
+
+
+@app.post("/dashboard/curve", response_model=CurveDashboardResponse, responses={400: {"model": ErrorResponse}})
+def curve_dashboard(request: CurveDashboardRequest) -> CurveDashboardResponse:
+    """Return dashboard-ready curve analytics and scenario overlays."""
+    try:
+        return build_curve_dashboard(request)
+    except ValueError as error:
+        raise bad_request(str(error)) from error
+
+
+@app.post("/dashboard/key-rate", response_model=KeyRateResponse, responses={400: {"model": ErrorResponse}})
+def key_rate_dashboard(request: KeyRateRequest) -> KeyRateResponse:
+    """Return dedicated key-rate DV01 analytics for a single bond."""
+    try:
+        return build_key_rate_response(request)
+    except ValueError as error:
+        raise bad_request(str(error)) from error
+
+
+@app.post(
+    "/dashboard/portfolio",
+    response_model=PortfolioDashboardResponse,
+    responses={400: {"model": ErrorResponse}},
+)
+def portfolio_dashboard(request: PortfolioDashboardRequest) -> PortfolioDashboardResponse:
+    """Return dashboard-ready portfolio analytics and scenario outputs."""
+    try:
+        return build_portfolio_dashboard(request)
+    except ValueError as error:
+        raise bad_request(str(error)) from error
+
+
+@app.post("/dashboard/hedge", response_model=HedgeAnalysisResponse, responses={400: {"model": ErrorResponse}})
+def hedge_dashboard(request: HedgeAnalysisRequest) -> HedgeAnalysisResponse:
+    """Return hedge notional required to move portfolio DV01 to target."""
+    try:
+        return build_hedge_analysis(request)
+    except ValueError as error:
+        raise bad_request(str(error)) from error

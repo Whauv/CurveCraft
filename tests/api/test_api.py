@@ -1,63 +1,127 @@
-"""Phase 8 API tests."""
+"""API and dashboard tests."""
 
 from __future__ import annotations
 
 import pytest
 
 
-def _load_api_components() -> tuple:
+def _load_api_components() -> dict[str, object]:
     """Load API callables and schemas, skipping cleanly if FastAPI is unavailable."""
     try:
+        from fastapi.testclient import TestClient
+
         from fixed_income.api.main import (
+            app,
+            bond_dashboard,
+            bond_curve_price_dashboard,
             bond_ytm,
             bootstrap_curve,
+            curve_dashboard,
+            dashboard_config,
             duration_analytics,
+            hedge_dashboard,
             health,
+            key_rate_dashboard,
+            portfolio_dashboard,
             portfolio_risk,
             price_bond,
         )
         from fixed_income.api.schemas import (
+            BondDashboardRequest,
+            BondCurvePriceRequest,
             BondPriceRequest,
             BondSpec,
             BondYtmRequest,
             CurveBootstrapRequest,
+            CurveDashboardRequest,
             CurveInstrumentRequest,
             DurationRequest,
+            HedgeAnalysisRequest,
+            KeyRateRequest,
+            PortfolioDashboardRequest,
             PortfolioPositionRequest,
             PortfolioRiskRequest,
         )
     except Exception as exc:  # pragma: no cover - local broken env fallback
         pytest.skip(f"FastAPI installation is incomplete in this environment: {exc}")
 
-    return (
-        bond_ytm,
-        bootstrap_curve,
-        duration_analytics,
-        health,
-        portfolio_risk,
-        price_bond,
-        BondPriceRequest,
-        BondSpec,
-        BondYtmRequest,
-        CurveBootstrapRequest,
-        CurveInstrumentRequest,
-        DurationRequest,
-        PortfolioPositionRequest,
-        PortfolioRiskRequest,
-    )
+    return {
+        "TestClient": TestClient,
+        "app": app,
+        "bond_dashboard": bond_dashboard,
+        "bond_curve_price_dashboard": bond_curve_price_dashboard,
+        "bond_ytm": bond_ytm,
+        "bootstrap_curve": bootstrap_curve,
+        "curve_dashboard": curve_dashboard,
+        "dashboard_config": dashboard_config,
+        "duration_analytics": duration_analytics,
+        "hedge_dashboard": hedge_dashboard,
+        "health": health,
+        "key_rate_dashboard": key_rate_dashboard,
+        "portfolio_dashboard": portfolio_dashboard,
+        "portfolio_risk": portfolio_risk,
+        "price_bond": price_bond,
+        "BondDashboardRequest": BondDashboardRequest,
+        "BondCurvePriceRequest": BondCurvePriceRequest,
+        "BondPriceRequest": BondPriceRequest,
+        "BondSpec": BondSpec,
+        "BondYtmRequest": BondYtmRequest,
+        "CurveBootstrapRequest": CurveBootstrapRequest,
+        "CurveDashboardRequest": CurveDashboardRequest,
+        "CurveInstrumentRequest": CurveInstrumentRequest,
+        "DurationRequest": DurationRequest,
+        "HedgeAnalysisRequest": HedgeAnalysisRequest,
+        "KeyRateRequest": KeyRateRequest,
+        "PortfolioDashboardRequest": PortfolioDashboardRequest,
+        "PortfolioPositionRequest": PortfolioPositionRequest,
+        "PortfolioRiskRequest": PortfolioRiskRequest,
+    }
+
+
+def _sample_curve_instruments(curve_instrument_request) -> list[object]:
+    """Return a reusable set of sample curve instruments."""
+    return [
+        curve_instrument_request(type="deposit", tenor="1M", rate=0.05),
+        curve_instrument_request(type="deposit", tenor="3M", rate=0.051),
+        curve_instrument_request(type="deposit", tenor="6M", rate=0.0515),
+        curve_instrument_request(type="deposit", tenor="1Y", rate=0.052),
+        curve_instrument_request(type="swap", tenor="2Y", rate=0.0525),
+        curve_instrument_request(type="swap", tenor="5Y", rate=0.053),
+        curve_instrument_request(type="swap", tenor="10Y", rate=0.0535),
+        curve_instrument_request(type="swap", tenor="30Y", rate=0.054),
+    ]
+
+
+def test_dashboard_homepage_serves_html() -> None:
+    """The dashboard homepage should render the curated UI shell."""
+    components = _load_api_components()
+    client = components["TestClient"](components["app"])
+    response = client.get("/")
+    assert response.status_code == 200
+    assert "Price a Bond" in response.text
+    assert "Build a Curve" in response.text
+    assert "Analyze a Portfolio" in response.text
+
+
+def test_dashboard_config_returns_samples() -> None:
+    """The dashboard config endpoint should expose sample payloads and supported options."""
+    components = _load_api_components()
+    response = components["dashboard_config"]()
+    assert response.frequency_options == [1, 2, 4]
+    assert "sample_bond_request" in response.model_dump()
 
 
 def test_health_endpoint() -> None:
     """Health endpoint should return an ok status."""
-    _, _, _, health, _, _, *_ = _load_api_components()
-    assert health() == {"status": "ok", "service": "curvecraft-api"}
+    components = _load_api_components()
+    assert components["health"]() == {"status": "ok", "service": "curvecraft-api"}
 
 
 def test_bond_price_endpoint() -> None:
     """Bond pricing endpoint should return price components."""
-    _, _, _, _, _, price_bond, BondPriceRequest, *_ = _load_api_components()
-    response = price_bond(
-        BondPriceRequest.model_validate(
+    components = _load_api_components()
+    response = components["price_bond"](
+        components["BondPriceRequest"].model_validate(
             {
                 "face": 1000.0,
                 "coupon_rate": 0.04,
@@ -74,12 +138,40 @@ def test_bond_price_endpoint() -> None:
     assert response.clean_price == pytest.approx(1000.0, abs=1e-10)
 
 
+def test_bond_dashboard_endpoint() -> None:
+    """The dashboard bond endpoint should return metrics and chart-ready series."""
+    components = _load_api_components()
+    response = components["bond_dashboard"](
+        components["BondDashboardRequest"].model_validate(
+            {
+                "bond_spec": {
+                    "face": 1000.0,
+                    "coupon_rate": 0.05,
+                    "maturity": "2035-01-01",
+                    "issue_date": "2025-01-01",
+                    "frequency": 2,
+                    "day_count": "ACT/ACT",
+                },
+                "yield": 0.05,
+                "settlement_date": "2025-01-01",
+                "scenario_bump_bps": 25.0,
+                "yield_range_min": 0.01,
+                "yield_range_max": 0.12,
+                "price_yield_points": 21,
+            }
+        )
+    )
+    assert response.clean_price > 0.0
+    assert len(response.price_yield_yields) == 21
+    assert len(response.cash_flows) > 0
+
+
 def test_bond_ytm_endpoint() -> None:
     """Bond YTM endpoint should recover par yield."""
-    bond_ytm, _, _, _, _, _, _, BondSpec, BondYtmRequest, *_ = _load_api_components()
-    response = bond_ytm(
-        BondYtmRequest(
-            bond_spec=BondSpec(
+    components = _load_api_components()
+    response = components["bond_ytm"](
+        components["BondYtmRequest"](
+            bond_spec=components["BondSpec"](
                 face=1000.0,
                 coupon_rate=0.04,
                 maturity="2030-01-01",
@@ -96,30 +188,116 @@ def test_bond_ytm_endpoint() -> None:
 
 def test_curve_bootstrap_endpoint() -> None:
     """Curve bootstrap endpoint should return curve arrays."""
-    _, bootstrap_curve, _, _, _, _, _, _, _, CurveBootstrapRequest, CurveInstrumentRequest, *_ = (
-        _load_api_components()
-    )
-    response = bootstrap_curve(
-        CurveBootstrapRequest(
-            instruments=[
-                CurveInstrumentRequest(type="deposit", tenor="1M", rate=0.05),
-                CurveInstrumentRequest(type="deposit", tenor="3M", rate=0.051),
-                CurveInstrumentRequest(type="deposit", tenor="6M", rate=0.0515),
-                CurveInstrumentRequest(type="deposit", tenor="1Y", rate=0.052),
-                CurveInstrumentRequest(type="swap", tenor="2Y", rate=0.0525),
-                CurveInstrumentRequest(type="swap", tenor="5Y", rate=0.053),
-            ]
+    components = _load_api_components()
+    response = components["bootstrap_curve"](
+        components["CurveBootstrapRequest"](
+            instruments=_sample_curve_instruments(components["CurveInstrumentRequest"])[:6]
         )
     )
     assert response.tenors[0] == 0.0
     assert response.discount_factors[0] == 1.0
 
 
+def test_curve_dashboard_endpoint() -> None:
+    """The dashboard curve endpoint should return curve views and shifted overlays."""
+    components = _load_api_components()
+    response = components["curve_dashboard"](
+        components["CurveDashboardRequest"](
+            instruments=_sample_curve_instruments(components["CurveInstrumentRequest"]),
+            max_maturity=30.0,
+            grid_points=48,
+            scenario_parallel_shift_bps=20.0,
+        )
+    )
+    assert len(response.nodes) >= 2
+    assert len(response.curve_maturities) == 48
+    assert len(response.shifted_spot_rates) == 48
+    assert "parallel_up_10bps" in response.scenario_rates
+
+
+def test_bond_curve_price_endpoint() -> None:
+    """Curve-based pricing endpoint should return metrics for requested bonds."""
+    components = _load_api_components()
+    response = components["bond_curve_price_dashboard"](
+        components["BondCurvePriceRequest"](
+            bond_spec=components["BondSpec"](
+                face=1000.0,
+                coupon_rate=0.05,
+                maturity="2035-01-01",
+                issue_date="2025-01-01",
+                frequency=2,
+                day_count="ACT/ACT",
+            ),
+            settlement_date="2025-01-01",
+            curve_instruments=_sample_curve_instruments(components["CurveInstrumentRequest"]),
+        )
+    )
+    assert response.curve_source == "request"
+    assert len(response.metrics) >= 1
+
+
+def test_key_rate_dashboard_endpoint() -> None:
+    """Dedicated key-rate endpoint should return bucket map and totals."""
+    components = _load_api_components()
+    response = components["key_rate_dashboard"](
+        components["KeyRateRequest"](
+            bond_spec=components["BondSpec"](
+                face=1000.0,
+                coupon_rate=0.05,
+                maturity="2035-01-01",
+                issue_date="2025-01-01",
+                frequency=2,
+                day_count="ACT/ACT",
+            ),
+            settlement_date="2025-01-01",
+            curve_instruments=_sample_curve_instruments(components["CurveInstrumentRequest"]),
+            bump_bps=1.0,
+        )
+    )
+    assert "10Y" in response.key_rate_dv01
+    assert response.total_curve_dv01 > 0.0
+
+
+def test_hedge_dashboard_endpoint() -> None:
+    """Hedge endpoint should produce a required notional to hit target DV01."""
+    components = _load_api_components()
+    response = components["hedge_dashboard"](
+        components["HedgeAnalysisRequest"](
+            positions=[
+                components["PortfolioPositionRequest"](
+                    bond_spec=components["BondSpec"](
+                        face=1000.0,
+                        coupon_rate=0.05,
+                        maturity="2032-01-01",
+                        issue_date="2025-01-01",
+                        frequency=2,
+                        day_count="ACT/ACT",
+                    ),
+                    notional=1000000.0,
+                    direction=1,
+                )
+            ],
+            settlement_date="2025-01-01",
+            target_dv01=0.0,
+            hedge_bond_spec=components["BondSpec"](
+                face=1000.0,
+                coupon_rate=0.06,
+                maturity="2038-01-01",
+                issue_date="2025-01-01",
+                frequency=2,
+                day_count="ACT/ACT",
+            ),
+            curve_instruments=_sample_curve_instruments(components["CurveInstrumentRequest"]),
+        )
+    )
+    assert response.hedge_bond_unit_dv01 > 0.0
+
+
 def test_duration_endpoint() -> None:
     """Duration analytics endpoint should return all requested measures."""
-    _, _, duration_analytics, _, _, _, _, _, _, _, _, DurationRequest, *_ = _load_api_components()
-    response = duration_analytics(
-        DurationRequest.model_validate(
+    components = _load_api_components()
+    response = components["duration_analytics"](
+        components["DurationRequest"].model_validate(
             {
                 "bond_spec": {
                     "face": 1000.0,
@@ -142,14 +320,12 @@ def test_duration_endpoint() -> None:
 
 def test_portfolio_risk_endpoint() -> None:
     """Portfolio risk endpoint should return aggregate risk and report rows."""
-    _, _, _, _, portfolio_risk, _, _, BondSpec, _, _, _, _, PortfolioPositionRequest, PortfolioRiskRequest = (
-        _load_api_components()
-    )
-    response = portfolio_risk(
-        PortfolioRiskRequest(
+    components = _load_api_components()
+    response = components["portfolio_risk"](
+        components["PortfolioRiskRequest"](
             positions=[
-                PortfolioPositionRequest(
-                    bond_spec=BondSpec(
+                components["PortfolioPositionRequest"](
+                    bond_spec=components["BondSpec"](
                         face=1000.0,
                         coupon_rate=0.05,
                         maturity="2032-01-01",
@@ -171,27 +347,12 @@ def test_portfolio_risk_endpoint() -> None:
 
 def test_portfolio_risk_accepts_explicit_curve() -> None:
     """Portfolio risk endpoint should accept a caller-supplied curve."""
-    (
-        _,
-        _,
-        _,
-        _,
-        portfolio_risk,
-        _,
-        _,
-        BondSpec,
-        _,
-        _,
-        CurveInstrumentRequest,
-        _,
-        PortfolioPositionRequest,
-        PortfolioRiskRequest,
-    ) = _load_api_components()
-    response = portfolio_risk(
-        PortfolioRiskRequest(
+    components = _load_api_components()
+    response = components["portfolio_risk"](
+        components["PortfolioRiskRequest"](
             positions=[
-                PortfolioPositionRequest(
-                    bond_spec=BondSpec(
+                components["PortfolioPositionRequest"](
+                    bond_spec=components["BondSpec"](
                         face=1000.0,
                         coupon_rate=0.05,
                         maturity="2032-01-01",
@@ -204,16 +365,36 @@ def test_portfolio_risk_accepts_explicit_curve() -> None:
                 )
             ],
             settlement_date="2025-01-01",
-            curve_instruments=[
-                CurveInstrumentRequest(type="deposit", tenor="1M", rate=0.04),
-                CurveInstrumentRequest(type="deposit", tenor="3M", rate=0.041),
-                CurveInstrumentRequest(type="deposit", tenor="6M", rate=0.0415),
-                CurveInstrumentRequest(type="deposit", tenor="1Y", rate=0.042),
-                CurveInstrumentRequest(type="swap", tenor="2Y", rate=0.043),
-                CurveInstrumentRequest(type="swap", tenor="5Y", rate=0.044),
-                CurveInstrumentRequest(type="swap", tenor="10Y", rate=0.045),
-                CurveInstrumentRequest(type="swap", tenor="30Y", rate=0.046),
-            ],
+            curve_instruments=_sample_curve_instruments(components["CurveInstrumentRequest"]),
         )
     )
     assert response.curve_source == "request"
+
+
+def test_portfolio_dashboard_endpoint() -> None:
+    """The dashboard portfolio endpoint should return risk rows and scenario outputs."""
+    components = _load_api_components()
+    response = components["portfolio_dashboard"](
+        components["PortfolioDashboardRequest"](
+            positions=[
+                components["PortfolioPositionRequest"](
+                    bond_spec=components["BondSpec"](
+                        face=1000.0,
+                        coupon_rate=0.05,
+                        maturity="2032-01-01",
+                        issue_date="2025-01-01",
+                        frequency=2,
+                        day_count="ACT/ACT",
+                    ),
+                    notional=1000000.0,
+                    direction=1,
+                )
+            ],
+            settlement_date="2025-01-01",
+            curve_instruments=_sample_curve_instruments(components["CurveInstrumentRequest"]),
+            scenario_parallel_shift_bps=25.0,
+        )
+    )
+    assert response.total_mv > 0.0
+    assert len(response.risk_report) == 1
+    assert len(response.key_rate_profile) >= 1
