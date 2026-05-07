@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import importlib
+
 import pytest
 
 
@@ -9,72 +11,45 @@ def _load_api_components() -> dict[str, object]:
     """Load API callables and schemas, skipping cleanly if FastAPI is unavailable."""
     try:
         from fastapi.testclient import TestClient
-
-        from fixed_income.api.main import (
-            app,
-            bond_curve_price_dashboard,
-            bond_dashboard,
-            bond_ytm,
-            bootstrap_curve,
-            curve_dashboard,
-            dashboard_config,
-            duration_analytics,
-            hedge_dashboard,
-            health,
-            key_rate_dashboard,
-            portfolio_dashboard,
-            portfolio_risk,
-            price_bond,
-        )
-        from fixed_income.api.schemas import (
-            BondCurvePriceRequest,
-            BondDashboardRequest,
-            BondPriceRequest,
-            BondSpec,
-            BondYtmRequest,
-            CurveBootstrapRequest,
-            CurveDashboardRequest,
-            CurveInstrumentRequest,
-            DurationRequest,
-            HedgeAnalysisRequest,
-            KeyRateRequest,
-            PortfolioDashboardRequest,
-            PortfolioPositionRequest,
-            PortfolioRiskRequest,
-        )
     except Exception as exc:  # pragma: no cover - local broken env fallback
         pytest.skip(f"FastAPI installation is incomplete in this environment: {exc}")
 
+    try:
+        api_main = importlib.import_module("fixed_income.api.main")
+        api_schemas = importlib.import_module("fixed_income.api.schemas")
+    except Exception as exc:  # pragma: no cover - local broken env fallback
+        pytest.skip(f"FastAPI application modules are unavailable in this environment: {exc}")
+
     return {
         "TestClient": TestClient,
-        "app": app,
-        "bond_dashboard": bond_dashboard,
-        "bond_curve_price_dashboard": bond_curve_price_dashboard,
-        "bond_ytm": bond_ytm,
-        "bootstrap_curve": bootstrap_curve,
-        "curve_dashboard": curve_dashboard,
-        "dashboard_config": dashboard_config,
-        "duration_analytics": duration_analytics,
-        "hedge_dashboard": hedge_dashboard,
-        "health": health,
-        "key_rate_dashboard": key_rate_dashboard,
-        "portfolio_dashboard": portfolio_dashboard,
-        "portfolio_risk": portfolio_risk,
-        "price_bond": price_bond,
-        "BondDashboardRequest": BondDashboardRequest,
-        "BondCurvePriceRequest": BondCurvePriceRequest,
-        "BondPriceRequest": BondPriceRequest,
-        "BondSpec": BondSpec,
-        "BondYtmRequest": BondYtmRequest,
-        "CurveBootstrapRequest": CurveBootstrapRequest,
-        "CurveDashboardRequest": CurveDashboardRequest,
-        "CurveInstrumentRequest": CurveInstrumentRequest,
-        "DurationRequest": DurationRequest,
-        "HedgeAnalysisRequest": HedgeAnalysisRequest,
-        "KeyRateRequest": KeyRateRequest,
-        "PortfolioDashboardRequest": PortfolioDashboardRequest,
-        "PortfolioPositionRequest": PortfolioPositionRequest,
-        "PortfolioRiskRequest": PortfolioRiskRequest,
+        "app": api_main.app,
+        "bond_dashboard": api_main.bond_dashboard,
+        "bond_curve_price_dashboard": api_main.bond_curve_price_dashboard,
+        "bond_ytm": api_main.bond_ytm,
+        "bootstrap_curve": api_main.bootstrap_curve,
+        "curve_dashboard": api_main.curve_dashboard,
+        "dashboard_config": api_main.dashboard_config,
+        "duration_analytics": api_main.duration_analytics,
+        "hedge_dashboard": api_main.hedge_dashboard,
+        "health": api_main.health,
+        "key_rate_dashboard": api_main.key_rate_dashboard,
+        "portfolio_dashboard": api_main.portfolio_dashboard,
+        "portfolio_risk": api_main.portfolio_risk,
+        "price_bond": api_main.price_bond,
+        "BondDashboardRequest": api_schemas.BondDashboardRequest,
+        "BondCurvePriceRequest": api_schemas.BondCurvePriceRequest,
+        "BondPriceRequest": api_schemas.BondPriceRequest,
+        "BondSpec": api_schemas.BondSpec,
+        "BondYtmRequest": api_schemas.BondYtmRequest,
+        "CurveBootstrapRequest": api_schemas.CurveBootstrapRequest,
+        "CurveDashboardRequest": api_schemas.CurveDashboardRequest,
+        "CurveInstrumentRequest": api_schemas.CurveInstrumentRequest,
+        "DurationRequest": api_schemas.DurationRequest,
+        "HedgeAnalysisRequest": api_schemas.HedgeAnalysisRequest,
+        "KeyRateRequest": api_schemas.KeyRateRequest,
+        "PortfolioDashboardRequest": api_schemas.PortfolioDashboardRequest,
+        "PortfolioPositionRequest": api_schemas.PortfolioPositionRequest,
+        "PortfolioRiskRequest": api_schemas.PortfolioRiskRequest,
     }
 
 
