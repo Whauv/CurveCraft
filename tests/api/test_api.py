@@ -12,8 +12,8 @@ def _load_api_components() -> dict[str, object]:
 
         from fixed_income.api.main import (
             app,
-            bond_dashboard,
             bond_curve_price_dashboard,
+            bond_dashboard,
             bond_ytm,
             bootstrap_curve,
             curve_dashboard,
