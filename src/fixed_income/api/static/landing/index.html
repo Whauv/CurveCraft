@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CurveCraft | Pricing and Risk Engine at Your Service</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap"
+        rel="stylesheet"
+    >
+    <style>
+        :root {
+            --bg: #fafaf8;
+            --surface: #ffffff;
+            --surface-ruled: #f4f3f0;
+            --surface-data: #f0eff0;
+            --accent: #1a2744;
+            --positive: #15803d;
+            --negative: #b91c1c;
+            --neutral: #374151;
+            --border: rgba(0, 0, 0, 0.1);
+            --border-strong: rgba(26, 39, 68, 0.25);
+            --text: #0f172a;
+            --muted: #6b7280;
+            --data: #1a2744;
+            --amber: #92400e;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+        }
+
+        .shell {
+            width: min(1200px, calc(100vw - 40px));
+            margin: 0 auto;
+        }
+
+        .masthead {
+            background: var(--surface);
+            border-bottom: 2px solid #0f172a;
+        }
+
+        .masthead-main {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 20px;
+        }
+
+        .brand {
+            margin: 0;
+            font: 600 0.86rem/1 "IBM Plex Mono", monospace;
+            letter-spacing: 0.12em;
+            color: var(--accent);
+            text-transform: uppercase;
+        }
+
+        .masthead-tagline {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--neutral);
+            justify-content: center;
+        }
+
+        .masthead-tagline::before,
+        .masthead-tagline::after {
+            content: "";
+            height: 1px;
+            background: var(--border-strong);
+            flex: 1;
+        }
+
+        .masthead-tagline span {
+            font-family: "Playfair Display", serif;
+            font-style: italic;
+            font-size: 1.02rem;
+            white-space: nowrap;
+        }
+
+        .masthead-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .masthead-btn {
+            border: 1px solid var(--accent);
+            background: transparent;
+            color: var(--accent);
+            text-decoration: none;
+            padding: 9px 12px;
+            border-radius: 0;
+            font: 500 0.8rem/1 "IBM Plex Mono", monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .masthead-btn.is-primary {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .ticker {
+            background: var(--accent);
+            overflow: hidden;
+            white-space: nowrap;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .ticker-track {
+            display: inline-block;
+            padding: 8px 0;
+            color: #fff;
+            font: 500 0.72rem/1 "IBM Plex Mono", monospace;
+            animation: ticker 26s linear infinite;
+            min-width: 200%;
+        }
+
+        .up { color: #f59e0b; }
+        .down { color: #ef4444; }
+
+        @keyframes ticker {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        main { padding: 30px 0 40px; }
+
+        .hero-rule-strong {
+            height: 3px;
+            background: var(--accent);
+            transform-origin: left;
+        }
+
+        .hero-rule-thin {
+            height: 1px;
+            background: rgba(15, 23, 42, 0.5);
+            margin-top: 18px;
+        }
+
+        .hero-eyebrow {
+            margin: 16px 0 0;
+            color: var(--accent);
+            font: 600 0.76rem/1 "IBM Plex Mono", monospace;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .hero-headline {
+            margin: 10px 0 8px;
+            font-family: "Playfair Display", serif;
+            font-weight: 900;
+            font-size: clamp(3.2rem, 6vw, 7rem);
+            letter-spacing: -0.01em;
+            color: var(--accent);
+            line-height: 0.95;
+        }
+
+        .hero-editorial {
+            display: grid;
+            grid-template-columns: 1.3fr 0.7fr;
+            gap: 28px;
+            margin-top: 18px;
+        }
+
+        .hero-copy p {
+            margin: 0;
+            color: var(--neutral);
+            font-size: 18px;
+            line-height: 1.65;
+        }
+
+        .hero-actions {
+            margin-top: 18px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .hero-btn {
+            border-radius: 0;
+            text-decoration: none;
+            padding: 11px 14px;
+            font: 500 0.84rem/1 "IBM Plex Mono", monospace;
+            border: 1px solid var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .hero-btn.is-primary {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .hero-btn.is-outline {
+            background: transparent;
+            color: var(--accent);
+        }
+
+        .spec-tags {
+            margin-top: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .spec-tag {
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            background: var(--surface-data);
+            border-radius: 2px;
+            padding: 4px 10px;
+            color: var(--neutral);
+            font: 500 0.74rem/1 "IBM Plex Mono", monospace;
+        }
+
+        .yield-panel {
+            background: var(--surface-data);
+            border: 1px solid var(--border);
+            padding: 12px;
+        }
+
+        .yield-caption {
+            margin-top: 7px;
+            color: var(--muted);
+            font: italic 400 0.72rem/1.2 "IBM Plex Sans", sans-serif;
+        }
+
+        .yield-grid {
+            width: 100%;
+            border-collapse: collapse;
+            font: 400 0.78rem/1.4 "IBM Plex Mono", monospace;
+            color: var(--data);
+        }
+
+        .yield-grid thead th {
+            color: var(--accent);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-bottom: 1px solid var(--border);
+            padding: 5px 2px;
+            text-align: left;
+        }
+
+        .yield-grid tbody tr {
+            opacity: 0;
+        }
+
+        .yield-grid td {
+            border-bottom: 1px solid var(--border);
+            padding: 6px 2px;
+            color: #0f172a;
+        }
+
+        .yield-grid td.pos { color: var(--positive); }
+        .yield-grid td.neg { color: var(--negative); }
+
+        .section {
+            margin-top: 42px;
+        }
+
+        .section-title {
+            margin: 0 0 10px;
+            color: var(--accent);
+            font: 600 0.88rem/1 "IBM Plex Mono", monospace;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .capability-wrap {
+            border-top: 1px solid rgba(0, 0, 0, 0.15);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+            background: var(--surface);
+        }
+
+        .capability-row {
+            display: grid;
+            grid-template-columns: 2.4fr 1fr 1.8fr 2fr;
+            gap: 14px;
+            padding: 14px 24px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            font: 400 0.8rem/1.35 "IBM Plex Mono", monospace;
+            color: var(--muted);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .capability-row:last-child { border-bottom: 0; }
+        .capability-row:nth-child(even) { background: var(--bg); }
+        .capability-row.header {
+            background: var(--surface-ruled);
+            color: var(--muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            opacity: 1;
+        }
+
+        .capability-row.data-row:hover {
+            background: #f0f4ff;
+            border-left: 3px solid var(--accent);
+            padding-left: 21px;
+        }
+
+        .capability-name {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .module-pill {
+            display: inline-block;
+            background: var(--accent);
+            color: #fff;
+            border-radius: 999px;
+            padding: 2px 8px;
+            font-size: 0.73rem;
+            text-transform: lowercase;
+            width: fit-content;
+        }
+
+        .capability-note {
+            margin: 9px 0 0;
+            color: var(--muted);
+            font: italic 400 0.78rem/1.4 "IBM Plex Sans", sans-serif;
+        }
+
+        .install-run {
+            margin-top: 46px;
+            background: var(--accent);
+            color: #fff;
+            padding: 28px 24px;
+        }
+
+        .install-run-grid {
+            display: grid;
+            grid-template-columns: 0.9fr 1.2fr 0.9fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .install-title,
+        .run-title {
+            margin: 0 0 8px;
+            font: 600 0.86rem/1 "IBM Plex Mono", monospace;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #d9e6fb;
+        }
+
+        .install-body,
+        .run-body {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.76);
+            font-size: 0.88rem;
+        }
+
+        .install-steps {
+            margin-top: 12px;
+            display: grid;
+            gap: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .install-step {
+            display: grid;
+            gap: 2px;
+        }
+
+        .step-no {
+            color: #f59e0b;
+            font: 600 0.78rem/1 "IBM Plex Mono", monospace;
+            letter-spacing: 0.06em;
+        }
+
+        .step-desc {
+            color: rgba(255, 255, 255, 0.76);
+            font-size: 0.8rem;
+        }
+
+        .terminal {
+            background: #0a0d14;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-left: 3px solid #f59e0b;
+            padding: 8px 10px 10px;
+            position: relative;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .terminal + .terminal { margin-top: 10px; }
+
+        .terminal-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 7px;
+            color: #6b7280;
+            font: 400 0.68rem/1 "IBM Plex Mono", monospace;
+        }
+
+        .dots { display: inline-flex; gap: 5px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .dot.r { background: #ef4444; }
+        .dot.y { background: #f59e0b; }
+        .dot.g { background: #22c55e; }
+
+        .copy-btn {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.06);
+            color: #d2d9e6;
+            padding: 4px 7px;
+            font: 500 0.7rem/1 "IBM Plex Mono", monospace;
+            cursor: pointer;
+        }
+
+        .terminal pre {
+            margin: 0;
+            color: #e6eefc;
+            white-space: pre-wrap;
+            font: 400 0.79rem/1.4 "IBM Plex Mono", monospace;
+        }
+
+        .endpoint-box {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .endpoint-head {
+            margin: 0 0 8px;
+            color: rgba(255, 255, 255, 0.45);
+            font: 500 0.68rem/1 "IBM Plex Mono", monospace;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .endpoint-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 8px 0;
+            color: #fff;
+            font: 400 0.78rem/1.3 "IBM Plex Mono", monospace;
+        }
+
+        .endpoint-row:last-child { border-bottom: 0; }
+
+        .endpoint-row:hover { background: rgba(255, 255, 255, 0.08); }
+
+        .sheets {
+            margin-top: 42px;
+            border-top: 1px solid rgba(0, 0, 0, 0.15);
+            padding-top: 18px;
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 24px;
+        }
+
+        .sheet-title {
+            margin: 0 0 12px;
+            color: var(--accent);
+            font-family: "Playfair Display", serif;
+            font-size: 1.85rem;
+            font-weight: 700;
+        }
+
+        .module-row {
+            display: grid;
+            grid-template-columns: auto 12px 1fr;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 8px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .module-row:hover { background: #f0f4ff; }
+
+        .module-name {
+            color: var(--accent);
+            font: 600 0.8rem/1 "IBM Plex Mono", monospace;
+            text-transform: lowercase;
+        }
+
+        .module-sep {
+            height: 18px;
+            border-left: 1px solid rgba(0, 0, 0, 0.15);
+            justify-self: center;
+        }
+
+        .module-desc {
+            color: var(--neutral);
+            font-size: 0.92rem;
+        }
+
+        .spec-line {
+            margin-top: 11px;
+            color: var(--muted);
+            font: 400 0.75rem/1.4 "IBM Plex Mono", monospace;
+        }
+
+        .note-card {
+            border-left: 3px solid var(--amber);
+            background: #fffbeb;
+            padding: 12px 16px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .note-card + .note-card { margin-top: 8px; }
+
+        .note-label {
+            color: var(--amber);
+            font: 600 0.69rem/1 "IBM Plex Mono", monospace;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .note-text {
+            margin-top: 5px;
+            color: var(--neutral);
+            font-size: 0.9rem;
+            line-height: 1.45;
+        }
+
+        .footer {
+            margin-top: 40px;
+            background: var(--accent);
+            color: #fff;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .footer-inner {
+            width: min(1200px, calc(100vw - 40px));
+            margin: 0 auto;
+            padding: 16px 0 10px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr 1fr;
+            gap: 16px;
+            align-items: start;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 12px;
+        }
+
+        .footer-brand {
+            margin: 0;
+            font: 600 0.85rem/1 "IBM Plex Mono", monospace;
+            letter-spacing: 0.11em;
+            text-transform: uppercase;
+        }
+
+        .footer-copy {
+            margin-top: 8px;
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 0.82rem;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font: 500 0.76rem/1 "IBM Plex Mono", monospace;
+        }
+
+        .footer-links a:hover { color: #fff; }
+
+        .footer-tech {
+            color: rgba(255, 255, 255, 0.62);
+            font: 400 0.73rem/1.45 "IBM Plex Mono", monospace;
+        }
+
+        .footer-bottom {
+            padding: 10px 0 4px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.35);
+            font: 400 0.72rem/1.2 "IBM Plex Mono", monospace;
+        }
+
+        @media (max-width: 768px) {
+            .shell { width: calc(100vw - 22px); }
+            .ticker { display: none; }
+            .masthead-main {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .masthead-actions { justify-content: center; }
+            .hero-editorial { grid-template-columns: 1fr; }
+            .capability-row {
+                grid-template-columns: 1fr;
+                gap: 6px;
+            }
+            .capability-row.header .cap-col:nth-child(n + 2),
+            .capability-row.data-row > :nth-child(n + 2) {
+                display: none;
+            }
+            .install-run-grid,
+            .sheets,
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (prefers-reduced-motion: no-preference) {
+            @supports (selector(:has(*))) {
+                .hero-headline {
+                    transition: opacity 0.5s ease;
+                    @starting-style { opacity: 0; }
+                }
+
+                .hero-copy,
+                .yield-panel {
+                    transition: opacity 0.45s ease;
+                    @starting-style { opacity: 0; }
+                }
+            }
+
+            .hero-rule-strong {
+                animation: ruleDraw 0.4s ease-out both;
+            }
+
+            @keyframes ruleDraw {
+                from { transform: scaleX(0); }
+                to { transform: scaleX(1); }
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="masthead">
+        <div class="masthead-main shell">
+            <p class="brand">CURVECRAFT</p>
+            <div class="masthead-tagline"><span>Pricing and Risk Engine at Your Service</span></div>
+            <div class="masthead-actions">
+                <a class="masthead-btn is-primary" href="/?page=bond">Open Product</a>
+                <a
+                    class="masthead-btn"
+                    href="https://github.com/Whauv/CurveCraft"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >View GitHub Repo</a>
+            </div>
+        </div>
+        <div class="ticker">
+            <div class="ticker-track">
+                5Y UST: 4.312% <span class="up">▲</span> · DV01/bp: $847 · ZC Spread: +12bp · Convexity: 0.847 ·
+                10Y Swap: 4.156% <span class="down">▼</span> · Modified Duration: 8.34yr · YTM: 5.21% · ACT/360 ·
+                Business Day: Modified Following · 5Y UST: 4.312% <span class="up">▲</span> · DV01/bp: $847 ·
+                ZC Spread: +12bp · Convexity: 0.847 · 10Y Swap: 4.156% <span class="down">▼</span> ·
+                Modified Duration: 8.34yr · YTM: 5.21% · ACT/360 · Business Day: Modified Following ·
+            </div>
+        </div>
+    </header>
+
+    <main class="shell">
+        <section>
+            <div class="hero-rule-strong"></div>
+            <p class="hero-eyebrow">CURVECRAFT</p>
+            <h1 class="hero-headline">Pricing and Risk Engine at Your Service</h1>
+            <div class="hero-rule-thin"></div>
+
+            <div class="hero-editorial">
+                <div class="hero-copy">
+                    <p>
+                        CurveCraft gives you bond pricing, yield curve bootstrapping, key-rate risk analytics, and portfolio
+                        DV01 hedging in one workflow. It is designed for learning, rapid prototyping, and practical rates analytics.
+                    </p>
+                    <div class="hero-actions">
+                        <a class="hero-btn is-primary" href="/?page=bond">Open Product</a>
+                        <a
+                            class="hero-btn is-outline"
+                            href="https://github.com/Whauv/CurveCraft"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >View GitHub Repo</a>
+                    </div>
+                    <div class="spec-tags">
+                        <span class="spec-tag">Python 3.10+</span>
+                        <span class="spec-tag">FastAPI + Plotly</span>
+                        <span class="spec-tag">Pricing + Curves + Risk</span>
+                    </div>
+                </div>
+
+                <aside class="yield-panel">
+                    <table class="yield-grid" aria-label="Indicative rates">
+                        <thead>
+                            <tr><th>INSTRUMENT</th><th>YIELD</th><th>CHG</th><th>DV01</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>5Y UST</td><td>4.312%</td><td class="pos">+2bp</td><td>$847</td></tr>
+                            <tr><td>10Y UST</td><td>4.589%</td><td class="neg">-1bp</td><td>$1,204</td></tr>
+                            <tr><td>30Y UST</td><td>4.821%</td><td class="pos">+4bp</td><td>$2,156</td></tr>
+                            <tr><td>ZC 5Y</td><td>4.298%</td><td class="pos">+1bp</td><td>$923</td></tr>
+                        </tbody>
+                    </table>
+                    <p class="yield-caption">Indicative rates · for illustration only</p>
+                </aside>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">WHAT YOU CAN DO</h2>
+            <div class="capability-wrap">
+                <div class="capability-row header">
+                    <div class="cap-col">CAPABILITY</div>
+                    <div class="cap-col">MODULE</div>
+                    <div class="cap-col">INPUTS</div>
+                    <div class="cap-col">OUTPUT</div>
+                </div>
+                <div class="capability-row data-row">
+                    <div class="capability-name">Price fixed-rate and zero-coupon bonds</div>
+                    <div><span class="module-pill">bonds</span></div>
+                    <div>Cash flows, rates</div>
+                    <div>Clean/dirty price, YTM</div>
+                </div>
+                <div class="capability-row data-row">
+                    <div class="capability-name">Bootstrap spot curves from deposit and swap quotes</div>
+                    <div><span class="module-pill">curves</span></div>
+                    <div>Deposit + swap quotes</div>
+                    <div>Zero curve, discount factors</div>
+                </div>
+                <div class="capability-row data-row">
+                    <div class="capability-name">Compute duration, convexity, DV01, and key-rate DV01</div>
+                    <div><span class="module-pill">analytics</span></div>
+                    <div>Yield, maturity</div>
+                    <div>DV01, key-rate DV01</div>
+                </div>
+                <div class="capability-row data-row">
+                    <div class="capability-name">Run portfolio scenario analysis and hedge sizing</div>
+                    <div><span class="module-pill">portfolio</span></div>
+                    <div>Positions, hedges</div>
+                    <div>DV01 aggregate, hedge sizing</div>
+                </div>
+            </div>
+            <p class="capability-note">
+                All modules operate on Python dataclasses and return structured output suitable for API responses or dashboard rendering.
+            </p>
+        </section>
+
+        <section class="install-run data-row">
+            <div class="install-run-grid">
+                <div class="install-steps">
+                    <h3 class="install-title">INSTALL</h3>
+                    <p class="install-body">Set up the project locally in a few commands:</p>
+                    <div class="install-step"><span class="step-no">01 →</span><span class="step-desc">Create local virtual environment</span></div>
+                    <div class="install-step"><span class="step-no">02 →</span><span class="step-desc">Activate project environment</span></div>
+                    <div class="install-step"><span class="step-no">03 →</span><span class="step-desc">Install project dependencies</span></div>
+                    <div class="install-step"><span class="step-no">04 →</span><span class="step-desc">Install package in editable mode</span></div>
+                </div>
+
+                <div>
+                    <div class="terminal data-row">
+                        <div class="terminal-bar">
+                            <span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span>
+                            <span>curvecraft · bash</span>
+                            <button class="copy-btn" data-copy-target="install-code">Copy</button>
+                        </div>
+                        <pre id="install-code">python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+pip install -e .</pre>
+                    </div>
+                    <div class="terminal data-row">
+                        <div class="terminal-bar">
+                            <span class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></span>
+                            <span>curvecraft · bash</span>
+                            <button class="copy-btn" data-copy-target="run-code">Copy</button>
+                        </div>
+                        <h3 class="run-title">RUN</h3>
+                        <p class="run-body">Launch the API and dashboard:</p>
+                        <pre id="run-code">python -m uvicorn fixed_income.api.main:app --reload --app-dir src</pre>
+                    </div>
+                </div>
+
+                <div class="endpoint-box data-row">
+                    <p class="endpoint-head">ENDPOINTS</p>
+                    <div class="endpoint-row"><span>Landing</span><span>/landing</span></div>
+                    <div class="endpoint-row"><span>Product</span><span>/?page=bond</span></div>
+                    <div class="endpoint-row"><span>API Docs</span><span>/docs</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="sheets">
+            <div>
+                <h2 class="sheet-title">Core Modules</h2>
+                <div class="module-row data-row">
+                    <span class="module-name">bonds</span>
+                    <span class="module-sep"></span>
+                    <span class="module-desc">cash-flow generation, clean/dirty pricing, YTM</span>
+                </div>
+                <div class="module-row data-row">
+                    <span class="module-name">curves</span>
+                    <span class="module-sep"></span>
+                    <span class="module-desc">bootstrapper, interpolators, zero-curve math</span>
+                </div>
+                <div class="module-row data-row">
+                    <span class="module-name">analytics</span>
+                    <span class="module-sep"></span>
+                    <span class="module-desc">duration, convexity, DV01, key-rate DV01</span>
+                </div>
+                <div class="module-row data-row">
+                    <span class="module-name">portfolio</span>
+                    <span class="module-sep"></span>
+                    <span class="module-desc">aggregate risk and hedge notionals</span>
+                </div>
+                <p class="spec-line">Supported: ACT/ACT · 30/360 · ACT/360 · Modified Following</p>
+            </div>
+
+            <div>
+                <h2 class="sheet-title">Technical Notes</h2>
+                <div class="note-card data-row">
+                    <div class="note-label">NOTE 01 ·</div>
+                    <div class="note-text">Rates are decimals internally (5% = 0.05).</div>
+                </div>
+                <div class="note-card data-row">
+                    <div class="note-label">NOTE 02 ·</div>
+                    <div class="note-text">Day counts supported: ACT/ACT, 30/360, ACT/360.</div>
+                </div>
+                <div class="note-card data-row">
+                    <div class="note-label">NOTE 03 ·</div>
+                    <div class="note-text">Business-day schedule adjustment: Modified Following (weekday-only).</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-grid">
+                <div>
+                    <p class="footer-brand">CURVECRAFT</p>
+                    <p class="footer-copy">Bond pricing, curve construction, portfolio risk, and hedging in one terminal-grade interface.</p>
+                </div>
+                <div class="footer-links">
+                    <a href="/?page=bond">Open Product</a>
+                    <a href="https://github.com/Whauv/CurveCraft" target="_blank" rel="noopener noreferrer">GitHub Repo</a>
+                    <a href="/docs">API Docs</a>
+                </div>
+                <div class="footer-tech">Python 3.10+ · FastAPI · Plotly · Uvicorn</div>
+            </div>
+            <div class="footer-bottom">Built for learning, rapid prototyping, and practical rates analytics.</div>
+        </div>
+    </footer>
+
+    <script>
+        (() => {
+            const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            const rows = Array.from(document.querySelectorAll(".data-row"));
+            const yieldRows = Array.from(document.querySelectorAll(".yield-grid tbody tr"));
+
+            if (!prefersReducedMotion) {
+                setTimeout(() => {
+                    yieldRows.forEach((row, index) => {
+                        window.setTimeout(() => { row.style.opacity = "1"; }, index * 30);
+                    });
+                }, 220);
+
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach((entry, index) => {
+                        if (entry.isIntersecting) {
+                            window.setTimeout(() => {
+                                entry.target.style.opacity = "1";
+                            }, index * 35);
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.1 });
+
+                rows.forEach((el) => {
+                    if (!el.classList.contains("header")) {
+                        el.style.opacity = "0";
+                        el.style.transition = "opacity 0.3s ease";
+                    }
+                    observer.observe(el);
+                });
+            } else {
+                yieldRows.forEach((row) => { row.style.opacity = "1"; });
+                rows.forEach((row) => { row.style.opacity = "1"; });
+            }
+
+            document.querySelectorAll(".copy-btn").forEach((button) => {
+                button.addEventListener("click", async () => {
+                    const targetId = button.getAttribute("data-copy-target");
+                    const node = document.getElementById(targetId);
+                    if (!node) return;
+                    try {
+                        await navigator.clipboard.writeText(node.textContent || "");
+                        const original = button.textContent;
+                        button.textContent = "Copied";
+                        window.setTimeout(() => { button.textContent = original; }, 2000);
+                    } catch (_error) {
+                        button.textContent = "Copy Failed";
+                        window.setTimeout(() => { button.textContent = "Copy"; }, 2000);
+                    }
+                });
+            });
+        })();
+    </script>
+</body>
+</html>

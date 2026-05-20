@@ -60,6 +60,8 @@ from .services import (
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 INDEX_PATH = STATIC_DIR / "index.html"
 INDEX_TEMPLATE = INDEX_PATH.read_text(encoding="utf-8")
+LANDING_PATH = STATIC_DIR / "landing" / "index.html"
+LANDING_TEMPLATE = LANDING_PATH.read_text(encoding="utf-8")
 
 app = FastAPI(
     title="CurveCraft Fixed Income API",
@@ -68,6 +70,16 @@ app = FastAPI(
 )
 configure_exception_handlers(app)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+@app.get("/landing", include_in_schema=False)
+@app.get("/landing/", include_in_schema=False)
+def landing_page() -> HTMLResponse:
+    """Serve the product landing page."""
+    return HTMLResponse(
+        content=LANDING_TEMPLATE,
+        headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"},
+    )
 
 
 @app.get("/", include_in_schema=False)
