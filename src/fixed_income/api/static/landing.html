@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CurveCraft | Fixed Income Analytics</title>
+    <link rel="stylesheet" href="/static/landing.css">
+</head>
+<body>
+    <div class="shell">
+        <section class="hero">
+            <div>
+                <p class="eyebrow">CurveCraft</p>
+                <h1>Production-Style Fixed Income Pricing and Risk Engine</h1>
+                <p>
+                    CurveCraft gives you bond pricing, yield curve bootstrapping, key-rate risk analytics,
+                    and portfolio DV01 hedging in one workflow. It is designed for learning, rapid prototyping,
+                    and practical rates analytics.
+                </p>
+                <div class="actions">
+                    <a class="action-link is-primary" href="/?page=bond">Open Product</a>
+                    <a class="action-link" href="https://github.com/your-username/curvecraft" target="_blank" rel="noopener noreferrer">
+                        View GitHub Repo
+                    </a>
+                </div>
+                <div class="badges">
+                    <span class="badge is-good">Python 3.10+</span>
+                    <span class="badge">FastAPI + Plotly</span>
+                    <span class="badge">Pricing + Curves + Risk</span>
+                </div>
+            </div>
+            <aside class="hero-card">
+                <h3>What You Can Do</h3>
+                <ul>
+                    <li>Price fixed-rate and zero-coupon bonds</li>
+                    <li>Bootstrap spot curves from deposit and swap quotes</li>
+                    <li>Compute duration, convexity, DV01, and key-rate DV01</li>
+                    <li>Run portfolio scenario analysis and hedge sizing</li>
+                </ul>
+            </aside>
+        </section>
+
+        <section class="grid">
+            <article class="panel">
+                <h2>Install</h2>
+                <p>Set up the project locally in a few commands:</p>
+                <pre><code>python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+pip install -e .</code></pre>
+            </article>
+
+            <article class="panel">
+                <h2>Run</h2>
+                <p>Launch the API and dashboard:</p>
+                <pre><code>python -m uvicorn fixed_income.api.main:app --reload --app-dir src</code></pre>
+                <p style="margin-top: 10px;">Then visit:</p>
+                <pre><code>Landing:  http://127.0.0.1:8000/landing
+Product:  http://127.0.0.1:8000/?page=bond
+API Docs: http://127.0.0.1:8000/docs</code></pre>
+            </article>
+
+            <article class="panel">
+                <h2>Core Modules</h2>
+                <ul class="list">
+                    <li><strong>bonds</strong>: cash-flow generation, clean/dirty pricing, YTM</li>
+                    <li><strong>curves</strong>: bootstrapper, interpolators, zero-curve math</li>
+                    <li><strong>analytics</strong>: duration, convexity, DV01, key-rate DV01</li>
+                    <li><strong>portfolio</strong>: aggregate risk and hedge notionals</li>
+                </ul>
+            </article>
+
+            <article class="panel">
+                <h2>Notes</h2>
+                <ul class="list">
+                    <li>Rates are decimals internally (5% = 0.05).</li>
+                    <li>Day counts supported: ACT/ACT, 30/360, ACT/360.</li>
+                    <li>Business-day schedule adjustment: Modified Following (weekday-only).</li>
+                </ul>
+            </article>
+        </section>
+    </div>
+</body>
+</html>
