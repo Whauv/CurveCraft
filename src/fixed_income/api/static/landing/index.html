@@ -17,6 +17,8 @@
             --surface-ruled: #f4f3f0;
             --surface-data: #f0eff0;
             --accent: #1a2744;
+            --accent-surface: #1a2744;
+            --accent-contrast: #ffffff;
             --positive: #15803d;
             --negative: #b91c1c;
             --neutral: #374151;
@@ -28,6 +30,25 @@
             --amber: #92400e;
         }
 
+        :root[data-theme="dark"] {
+            --bg: #08111d;
+            --surface: #0d1728;
+            --surface-ruled: #132238;
+            --surface-data: #101d31;
+            --accent: #d9e6fb;
+            --accent-surface: #0f1b2d;
+            --accent-contrast: #edf3fb;
+            --positive: #4ade80;
+            --negative: #f87171;
+            --neutral: #b8c5d9;
+            --border: rgba(217, 230, 251, 0.14);
+            --border-strong: rgba(217, 230, 251, 0.28);
+            --text: #edf3fb;
+            --muted: #91a2ba;
+            --data: #edf3fb;
+            --amber: #f4b76a;
+        }
+
         * { box-sizing: border-box; }
 
         body {
@@ -35,6 +56,7 @@
             background: var(--bg);
             color: var(--text);
             font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+            transition: background 0.25s ease, color 0.25s ease;
         }
 
         .shell {
@@ -45,6 +67,7 @@
         .masthead {
             background: var(--surface);
             border-bottom: 2px solid #0f172a;
+            transition: background 0.25s ease, border-color 0.25s ease;
         }
 
         .masthead-main {
@@ -90,6 +113,7 @@
             display: flex;
             justify-content: flex-end;
             gap: 10px;
+            align-items: center;
         }
 
         .masthead-btn {
@@ -102,15 +126,36 @@
             font: 500 0.8rem/1 "IBM Plex Mono", monospace;
             text-transform: uppercase;
             letter-spacing: 0.03em;
+            transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
         }
 
         .masthead-btn.is-primary {
-            background: var(--accent);
-            color: #fff;
+            background: var(--accent-surface);
+            color: var(--accent-contrast);
+        }
+
+        .theme-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid var(--border-strong);
+            background: var(--surface-ruled);
+            color: var(--accent);
+            padding: 7px 10px;
+            font: 500 0.74rem/1 "IBM Plex Mono", monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            border-radius: 0;
+            transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--accent);
         }
 
         .ticker {
-            background: var(--accent);
+            background: var(--accent-surface);
             overflow: hidden;
             white-space: nowrap;
             border-top: 1px solid rgba(255, 255, 255, 0.12);
@@ -197,8 +242,8 @@
         }
 
         .hero-btn.is-primary {
-            background: var(--accent);
-            color: #fff;
+            background: var(--accent-surface);
+            color: var(--accent-contrast);
         }
 
         .hero-btn.is-outline {
@@ -311,6 +356,11 @@
             padding-left: 21px;
         }
 
+        :root[data-theme="dark"] .capability-row.data-row:hover,
+        :root[data-theme="dark"] .module-row:hover {
+            background: rgba(111, 149, 201, 0.12);
+        }
+
         .capability-name {
             color: var(--text);
             font-weight: 500;
@@ -318,8 +368,8 @@
 
         .module-pill {
             display: inline-block;
-            background: var(--accent);
-            color: #fff;
+            background: var(--accent-surface);
+            color: var(--accent-contrast);
             border-radius: 999px;
             padding: 2px 8px;
             font-size: 0.73rem;
@@ -335,8 +385,8 @@
 
         .install-run {
             margin-top: 46px;
-            background: var(--accent);
-            color: #fff;
+            background: var(--accent-surface);
+            color: var(--accent-contrast);
             padding: 28px 24px;
         }
 
@@ -521,6 +571,10 @@
             transition: opacity 0.3s ease;
         }
 
+        :root[data-theme="dark"] .note-card {
+            background: rgba(244, 183, 106, 0.12);
+        }
+
         .note-card + .note-card { margin-top: 8px; }
 
         .note-label {
@@ -539,9 +593,48 @@
 
         .footer {
             margin-top: 40px;
-            background: var(--accent);
-            color: #fff;
+            background: var(--accent-surface);
+            color: var(--accent-contrast);
             border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        :root[data-theme="dark"] .masthead {
+            background: #0b1525;
+            border-bottom-color: rgba(217, 230, 251, 0.22);
+        }
+
+        :root[data-theme="dark"] .ticker,
+        :root[data-theme="dark"] .install-run,
+        :root[data-theme="dark"] .footer,
+        :root[data-theme="dark"] .masthead-btn.is-primary,
+        :root[data-theme="dark"] .hero-btn.is-primary,
+        :root[data-theme="dark"] .module-pill,
+        :root[data-theme="dark"] .theme-toggle {
+            background: #0f1b2d;
+            color: #edf3fb;
+        }
+
+        :root[data-theme="dark"] .theme-toggle {
+            border-color: rgba(217, 230, 251, 0.22);
+        }
+
+        :root[data-theme="dark"] .endpoint-box {
+            background: rgba(13, 23, 40, 0.88);
+            border-color: rgba(217, 230, 251, 0.14);
+        }
+
+        :root[data-theme="dark"] .capability-wrap,
+        :root[data-theme="dark"] .yield-panel {
+            background: #0d1728;
+        }
+
+        :root[data-theme="dark"] .hero-rule-thin {
+            background: rgba(217, 230, 251, 0.24);
+        }
+
+        :root[data-theme="dark"] .ticker-track,
+        :root[data-theme="dark"] .footer-links a:hover {
+            color: #edf3fb;
         }
 
         .footer-inner {
@@ -653,6 +746,9 @@
             <p class="brand">CURVECRAFT</p>
             <div class="masthead-tagline"><span>Pricing and Risk Engine at Your Service</span></div>
             <div class="masthead-actions">
+                <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle theme">
+                    <span id="theme-toggle-label">Dark Mode</span>
+                </button>
                 <a class="masthead-btn is-primary" href="/?page=bond">Open Product</a>
                 <a
                     class="masthead-btn"
@@ -866,6 +962,29 @@ pip install -e .</pre>
 
     <script>
         (() => {
+            const root = document.documentElement;
+            const themeToggle = document.getElementById("theme-toggle");
+            const themeLabel = document.getElementById("theme-toggle-label");
+            const savedTheme = localStorage.getItem("curvecraft-landing-theme");
+
+            const applyTheme = (theme) => {
+                if (theme === "dark") {
+                    root.setAttribute("data-theme", "dark");
+                    themeLabel.textContent = "Light Mode";
+                } else {
+                    root.removeAttribute("data-theme");
+                    themeLabel.textContent = "Dark Mode";
+                }
+            };
+
+            applyTheme(savedTheme === "dark" ? "dark" : "light");
+
+            themeToggle?.addEventListener("click", () => {
+                const nextTheme = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+                applyTheme(nextTheme);
+                localStorage.setItem("curvecraft-landing-theme", nextTheme);
+            });
+
             const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
             const rows = Array.from(document.querySelectorAll(".data-row"));
             const yieldRows = Array.from(document.querySelectorAll(".yield-grid tbody tr"));
